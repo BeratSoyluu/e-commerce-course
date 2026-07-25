@@ -13,6 +13,11 @@ builder.Services.AddDbContext<DataContext>(options =>
     var connectionString = config.GetConnectionString("defaultConnection");
     options.UseSqlite(connectionString);
 });
+
+
+builder.Services.AddCors();
+
+
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi(options =>
@@ -33,6 +38,11 @@ if (app.Environment.IsDevelopment())
 //? Alt tarafta ise istediğimiz aşamada uygulamaya dahil ediyoruz.
 
 app.UseHttpsRedirection();
+
+app.UseCors(opt =>
+{
+    opt.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:3000");
+});
 
 app.UseAuthorization();
 
