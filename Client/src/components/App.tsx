@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { IProduct } from "../model/IProduct";
 import Header from "./Header";
 import ProductList from "./ProductList";
+import { Container, CssBaseline } from "@mui/material";
 
 
 function App() {
@@ -15,21 +16,24 @@ function App() {
   }, []);
 
   /*
-   [...products, {...}] — buradaki ... spread operatörü. "Mevcut products dizisinin tüm elemanlarını tek tek al, yeni bir dizinin içine dök, sonuna da şu yeni nesneyi ekle" demek.
+   ? [...products, {...}] — buradaki ... spread operatörü. "Mevcut products dizisinin tüm elemanlarını tek tek al, yeni bir dizinin içine dök, sonuna da şu yeni nesneyi ekle" demek.
   */ 
 
-  function addProduct(){
+  /*function addProduct(){
     setProducts([...products, {id: Date.now(), 
       name: "product 4", 
       price: 4000, 
       isActive: true, 
     }])
-  }
+  }*/
 
   return (
     <>
-      <Header products={products}/>
-      <ProductList products={products} addProduct={addProduct} />
+    <CssBaseline/>
+      <Header/>
+      <Container>
+        <ProductList products={products} />
+      </Container>
     </>
   )
 }
