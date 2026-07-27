@@ -49,41 +49,71 @@ namespace API.Migrations
                         new
                         {
                             Id = 1,
-                            Description = "Telefon Açıklaması",
+                            Description = "Akıllı Saat Açıklaması",
                             ImageUrl = "1.jpg",
                             IsActive = true,
-                            Name = "Iphone 15",
-                            Price = 70000m,
+                            Name = "Apple Watch Series 1",
+                            Price = 7000m,
                             Stock = 100
                         },
                         new
                         {
                             Id = 2,
-                            Description = "Telefon Açıklaması",
+                            Description = "Akıllı Saat Açıklaması",
                             ImageUrl = "2.jpg",
                             IsActive = true,
-                            Name = "Iphone 16",
-                            Price = 80000m,
+                            Name = "Apple Watch Series 2",
+                            Price = 8000m,
                             Stock = 100
                         },
                         new
                         {
                             Id = 3,
-                            Description = "Telefon Açıklaması",
+                            Description = "Akıllı Saat Açıklaması",
                             ImageUrl = "3.jpg",
-                            IsActive = false,
-                            Name = "Iphone 16 Pro",
-                            Price = 90000m,
+                            IsActive = true,
+                            Name = "Apple Watch Series 3",
+                            Price = 9000m,
                             Stock = 100
                         },
                         new
                         {
                             Id = 4,
-                            Description = "Telefon Açıklaması",
+                            Description = "Akıllı Saat Açıklaması",
                             ImageUrl = "4.jpg",
                             IsActive = true,
-                            Name = "Iphone 16 Pro Max",
-                            Price = 100000m,
+                            Name = "Xiaomi Redmi Watch 1",
+                            Price = 10000m,
+                            Stock = 100
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Description = "Akıllı Saat Açıklaması",
+                            ImageUrl = "5.jpg",
+                            IsActive = true,
+                            Name = "Xiaomi Redmi Watch 2",
+                            Price = 10000m,
+                            Stock = 100
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Description = "Akıllı Saat Açıklaması",
+                            ImageUrl = "6.jpg",
+                            IsActive = true,
+                            Name = "Xiaomi Redmi Watch 3",
+                            Price = 10000m,
+                            Stock = 100
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Description = "Akıllı Saat Açıklaması",
+                            ImageUrl = "7.jpg",
+                            IsActive = true,
+                            Name = "Xiaomi Redmi Watch 4",
+                            Price = 10000m,
                             Stock = 100
                         });
                 });
