@@ -1,6 +1,7 @@
 using API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Reader;
+using API.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,8 @@ builder.Services.AddOpenApi(options =>
 });
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandling>();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
