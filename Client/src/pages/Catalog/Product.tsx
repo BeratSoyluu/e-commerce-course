@@ -3,12 +3,27 @@ import type { IProduct } from "../../model/IProduct"
 import { AddShoppingCart } from "@mui/icons-material"
 import SearchIcon from '@mui/icons-material/Search';
 import { Link } from "react-router";
+import { useState } from "react";
+import requests from "../../api/requests";
+import { useCartContext } from "../../context/CartContext";
 
 interface Props {
     product: IProduct
 }
 
 export default function Product({product}: Props) {
+
+  const[loading,setLoading] = useState(false);
+  const { setCart } = useCartContext();
+
+  function HandleAddItem(productId: number){
+    setLoading(true);
+    requests.Cart.addItem(productId)
+    .then(cart => setCart(cart))
+    .catch(error=>console.log(error))
+    .finally(() => setLoading(false));
+  }
+
   return (
     /*<>
       {product.isActive ? (
@@ -22,15 +37,22 @@ export default function Product({product}: Props) {
     <Card>
         <CardMedia sx={{ height:160, backgroundSize: "contain" }} image={`http://localhost:5274/images/${product.imageUrl}`} />
         <CardContent>
-          <Typography gutterBottom variant="h6" component="h2" color="text.secondery">
+          <Typography gutterBottom variant="h6" component="h2" color="text.secondary">
             {product.name}
           </Typography>
           <Typography variant="body2" color="secondary">
             {new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(product.price)} ₺
           </Typography>
           <CardActions>
-            <Button variant="outlined" size="small" startIcon={<AddShoppingCart />} color="success">Add to cart</Button>
-            <Button component={Link} to={`/catalog/${product.id}`} variant="outlined" size = "small" startIcon={<SearchIcon/>} color="primary">VIEW</Button>
+            {/*<Button variant="outlined" size="small" startIcon={<AddShoppingCart />} color="success" >
+                Add to cart
+              </Button>*/}
+
+            <Button variant="outlined" size="small" loadingPosition="start" loading={loading} startIcon={<AddShoppingCart />} onClick={()=>HandleAddItem(product.id)}>
+            SEPETE EKLE 
+             </Button>
+
+            <Button component={Link} to={`/catalog/${product.id}`} variant="outlined" size = "small" startIcon={<SearchIcon/>} color="primary">incele</Button>
 
           </CardActions>
         </CardContent>
