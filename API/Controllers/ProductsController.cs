@@ -1,4 +1,5 @@
 using API.Data;
+using API.DTO;
 using API.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -17,16 +18,23 @@ namespace API.Controllers
             _context = context;
         }
 
+        //? ActionResult<T> kullanınca Swagger dönüş tipini (ProductDTO) şemada gösterebiliyor; IActionResult'ta bu bilgi yok.
         [HttpGet]
-        public async Task<IActionResult> GetProducts()
+        public async Task<ActionResult<List<ProductDTO>>> GetProducts()
         {
-            var products = await _context.Products.ToListAsync();
-            return Ok(products);
+            //? Filtre SQL'e çevrilir (WHERE IsActive = 1); pasif ürünler veritabanından hiç çekilmez.
+            var products = await _context.Products
+                .Where(p => p.IsActive)
+                .Select(p => ProductToDTO(p))
+                .ToListAsync();
+            return products;
         }
 
         // api/products/1
+        //! Detay pasif ürünü de döner: eski bir linkle gelen kullanıcı 404 yerine "satışta değil" mesajını görür.
+        //! Sepete eklemeyi CartController zaten engelliyor.
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetProduct(int? id)
+        public async Task<ActionResult<ProductDTO>> GetProduct(int? id)
         {
             if (id == null) //? id girilmemişse
             {
@@ -39,7 +47,21 @@ namespace API.Controllers
                 return NotFound(); //! 404 hata kodu
             }
 
-            return Ok(product);
+            return ProductToDTO(product);
+        }
+
+        private static ProductDTO ProductToDTO(Product product)
+        {
+            return new ProductDTO
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Description = product.Description,
+                Price = product.Price,
+                IsActive = product.IsActive,
+                ImageUrl = product.ImageUrl,
+                Stock = product.Stock
+            };
         }
     }
 }

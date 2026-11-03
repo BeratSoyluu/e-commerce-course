@@ -26,7 +26,8 @@ public class Cart
         if(item == null) return;
         
         item.Quantity -= quantity;
-        if(item.Quantity == 0)
+        //! "== 0" yetmez: sepetteki adetten fazlası silinmek istenirse adet eksiye düşer ve ürün listede kalırdı.
+        if(item.Quantity <= 0)
         {
             CartItems.Remove(item);
         }

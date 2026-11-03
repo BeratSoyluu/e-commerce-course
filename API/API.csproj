@@ -8,6 +8,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
+    <!-- ? Microsoft.AspNetCore.OpenApi 10.0.10 bu paketi 2.0.0 olarak getiriyor (geçişli bağımlılık). -->
+    <!-- ! 2.0.0 - 2.7.4 arası CVE-2026-49451 (GHSA-v5pm-xwqc-g5wc) açığına sahip; aynı major içindeki ilk yamalı sürüme sabitlendi. -->
+    <PackageReference Include="Microsoft.OpenApi" Version="2.7.5" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

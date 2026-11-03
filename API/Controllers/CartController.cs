@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using API.Data;
 using API.DTO;
 using API.Entity;
@@ -12,9 +11,11 @@ namespace API.Controllers;
 public class CartController : ControllerBase
 {
     private readonly DataContext _context;
-    public CartController(DataContext context)
+    private readonly IHostEnvironment _env;
+    public CartController(DataContext context, IHostEnvironment env)
     {
         _context = context;
+        _env = env; //? Cookie'nin Secure ayarı ortama göre değişeceği için gerekli
     }
 
     [HttpGet]
@@ -25,13 +26,33 @@ public class CartController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<ActionResult> AddItemToCart(int productId, int quantity)
+    public async Task<ActionResult<CartDTO>> AddItemToCart(int productId, int quantity)
     {
-        var cart = await GetOrCreate();
+        //? Önce isteğin kendisini doğruluyoruz. Geçersiz istek için veritabanına gitmeye ve sepet/cookie oluşturmaya gerek yok.
+        if(quantity <= 0)
+            return BadRequest(new ProblemDetails{Title = "Adet 0'dan büyük olmalıdır."});
+
         var product = await _context.Products.FirstOrDefaultAsync(i => i.Id == productId);
 
+        //? Frontend'deki interceptor toast'ta data.title'ı gösteriyor, düz string dönersek title boş gelir.
         if(product == null)
-            return NotFound("the prodct is not in database");
+            return NotFound(new ProblemDetails{Title = "Ürün bulunamadı."});
+
+        if(!product.IsActive)
+            return BadRequest(new ProblemDetails{Title = "Bu ürün şu an satışta değil."});
+
+        var cart = await GetOrCreate();
+
+        //! Stok kontrolü sepette zaten olan adedi de hesaba katmalı, yoksa 1'er 1'er ekleyerek stok aşılabilir.
+        var quantityInCart = cart.CartItems.FirstOrDefault(i => i.ProductId == productId)?.Quantity ?? 0;
+        if(quantityInCart + quantity > product.Stock)
+        {
+            return BadRequest(new ProblemDetails
+            {
+                Title = $"Yetersiz stok: stokta {product.Stock} adet var, sepetinizde zaten {quantityInCart} adet bulunuyor.",
+                Detail = $"En fazla {Math.Max(product.Stock - quantityInCart, 0)} adet daha ekleyebilirsiniz."
+            });
+        }
 
         cart.AddItem(product,quantity);
         var result = await _context.SaveChangesAsync() > 0;
@@ -42,14 +63,18 @@ public class CartController : ControllerBase
     }
 
     [HttpDelete]
-    public async Task<ActionResult> DeleteItemFromCart(int productId, int quantity)
+    public async Task<ActionResult<CartDTO>> DeleteItemFromCart(int productId, int quantity)
     {
+        if(quantity <= 0)
+            return BadRequest(new ProblemDetails{Title = "Adet 0'dan büyük olmalıdır."});
+
         var cart = await GetOrCreate();
 
         cart.DeleteItem(productId,quantity);
 
         var result = await _context.SaveChangesAsync() > 0;
-        if(result)    return Ok();
+        //? Güncel sepeti dönüyoruz ki frontend kendi hesaplamasına değil, sunucunun gerçek durumuna güvensin.
+        if(result)    return Ok(CartToDTO(cart));
         return BadRequest(new ProblemDetails{Title="Problem removing item from the cart"});
     }
 
@@ -69,7 +94,17 @@ public class CartController : ControllerBase
             var cookieOptions = new CookieOptions
             {
                 Expires = DateTime.Now.AddMonths(1),
-                IsEssential = true    
+                IsEssential = true,
+                //? HttpOnly: JavaScript (document.cookie) bu cookie'yi okuyamaz. XSS açığı olsa bile sepet kimliği çalınamaz.
+                //? Tarayıcı cookie'yi isteklere yine otomatik ekler (axios withCredentials), frontend'in onu okumasına gerek yok.
+                HttpOnly = true,
+                //? SameSite=Lax: Başka bir siteden gelen arka plan istekleri (form post, fetch) cookie'yi taşımaz -> CSRF'e karşı koruma.
+                //? localhost:3000 ve localhost:5274 port farkına rağmen "aynı site" sayılır, bu yüzden geliştirmede sorun çıkarmaz.
+                //! Frontend ve API ileride farklı domainlerde yayınlanırsa SameSite=None + Secure gerekir.
+                SameSite = SameSiteMode.Lax,
+                //? Secure: Cookie sadece HTTPS üzerinden gönderilir, ağda düz metin olarak dolaşmaz.
+                //! Development'ta API http çalıştığı için kapalı; açık olsaydı bazı tarayıcılar cookie'yi kaydetmezdi.
+                Secure = !_env.IsDevelopment()
             };
 
             Response.Cookies.Append("customerId",customerId,cookieOptions);

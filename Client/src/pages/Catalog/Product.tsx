@@ -5,7 +5,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import { Link } from "react-router";
 import { useState } from "react";
 import requests from "../../api/requests";
-import { useCartContext } from "../../context/CartContext";
+import { useCartContext } from "../../context/useCartContext";
+import { formatPrice, getImageUrl } from "../../utils/helpers";
 
 interface Props {
     product: IProduct
@@ -35,13 +36,13 @@ export default function Product({product}: Props) {
     </>*/ //? Ürünün aktif olup olmadığına bakıyor.
     <>
     <Card>
-        <CardMedia sx={{ height:160, backgroundSize: "contain" }} image={`http://localhost:5274/images/${product.imageUrl}`} />
+        <CardMedia sx={{ height:160, backgroundSize: "contain" }} image={getImageUrl(product.imageUrl)} />
         <CardContent>
           <Typography gutterBottom variant="h6" component="h2" color="text.secondary">
             {product.name}
           </Typography>
           <Typography variant="body2" color="secondary">
-            {new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(product.price)} ₺
+            {formatPrice(product.price)}
           </Typography>
           <CardActions>
             {/*<Button variant="outlined" size="small" startIcon={<AddShoppingCart />} color="success" >

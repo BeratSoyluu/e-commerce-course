@@ -6,6 +6,11 @@
 # dotenv files
 .env
 
+# SQLite veritabanı: migration + seed (HasData) ile "dotnet ef database update" yeniden oluşturur
+*.db
+*.db-shm
+*.db-wal
+
 # User-specific files
 *.rsuser
 *.suo
@@ -480,3 +485,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# VS Code çalışma alanı ayarları (kişisel)
+.vscode/
