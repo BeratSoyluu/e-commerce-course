@@ -6,10 +6,19 @@ import type { IProduct } from "../model/IProduct";
 import type { MetaData, PaginatedResponse } from "../model/IPagination";
 //? Aşağıdaki "const Cart" ile isim çakışmasın diye tipi ICart adıyla alıyoruz.
 import type { Cart as ICart } from "../model/ICart";
+import type { User } from "../model/IUser";
+import { clearStoredUser, getStoredUser, UNAUTHORIZED_EVENT } from "../utils/userStorage";
 
 //? Adres resimlerle aynı .env değişkeninden geliyor; port değişirse tek bir yeri güncellemek yeterli.
 axios.defaults.baseURL=`${API_URL}/api/`;
 axios.defaults.withCredentials = true;
+
+//? Her isteğe, giriş yapılmışsa JWT eklenir. Backend [Authorize] olan endpoint'lerde bu header'a bakar.
+axios.interceptors.request.use(config => {
+    const token = getStoredUser()?.token;
+    if(token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
 
 axios.interceptors.response.use(response => {
     return response;
@@ -36,7 +45,21 @@ axios.interceptors.response.use(response => {
             }
             break;
         case 401:
-            toast.error(data.title);
+            if(getStoredUser()) {
+                //? Token vardı ama sunucu kabul etmedi (süresi dolmuş/geçersiz): çıkış yap, login'e gönder.
+                //? React state'ine buradan ulaşamadığımız için olay yayınlıyoruz; AccountContextProvider dinliyor.
+                clearStoredUser();
+                window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+                toast.error("Oturumunuzun süresi doldu, lütfen tekrar giriş yapın.", { toastId: "session-expired" });
+                router.navigate("/login", { state: { from: router.state.location } });
+            } else {
+                //? Token yoksa (ör. login'de yanlış şifre) sadece sunucunun mesajını göster
+                toast.error(data?.title ?? "Bu işlem için giriş yapmalısınız.");
+            }
+            break;
+        case 403:
+            //? Giriş yapılmış ama rol yetmiyor (ör. Customer, admin endpoint'ine istek attı)
+            toast.error("Bu işlem için yetkiniz yok.");
             break;
         case 404:
             toast.error(data.title);
@@ -87,8 +110,14 @@ const Cart = {
     deleteItem: (productId: number, quantity = 1) =>queries.delete<ICart>(`cart?productId=${productId}&quantity=${quantity}`)
 }
 
+const Account = {
+    login: (body: { email: string; password: string }) => queries.post<User>("account/login", body),
+    register: (body: { name: string; email: string; password: string }) => queries.post<void>("account/register", body),
+    getUser: () => queries.get<User>("account/getUser"),
+}
+
 const requests = {
-    Catalog, Errors, Cart
+    Catalog, Errors, Cart, Account
 }
 
 export default requests

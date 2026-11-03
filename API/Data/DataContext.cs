@@ -1,9 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using API.Entity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace API.Data;
 
-public class DataContext(DbContextOptions options) : DbContext(options)
+//? IdentityDbContext; kullanıcı, rol, kullanıcı-rol vb. tablolarını (AspNetUsers, AspNetRoles...) modele ekler.
+public class DataContext(DbContextOptions options) : IdentityDbContext<AppUser>(options)
 {
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Cart> Carts => Set<Cart>();

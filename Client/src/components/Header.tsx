@@ -1,7 +1,10 @@
-import { ShoppingCart } from "@mui/icons-material";
-import { AppBar, Badge, Box, Button, IconButton, Stack, Toolbar, Typography } from "@mui/material";
-import { Link, NavLink } from "react-router";
+import { AccountCircle, ShoppingCart } from "@mui/icons-material";
+import { AppBar, Badge, Box, Button, IconButton, Menu, MenuItem, Stack, Toolbar, Typography } from "@mui/material";
+import { useState } from "react";
+import { Link, NavLink, useNavigate } from "react-router";
 import { useCartContext } from "../context/useCartContext";
+import { useAccountContext } from "../context/useAccountContext";
+import requests from "../api/requests";
 
 const links = [
   {title:"Home",to:"/"},
@@ -24,8 +27,20 @@ const navStyles = {
 }
 
 export default function Header() {
-  const { cart } = useCartContext();
+  const { cart, setCart } = useCartContext();
+  const { user, logout } = useAccountContext();
+  const navigate = useNavigate();
+  //? Menü, açıldığı butona (anchor) göre konumlanır; null ise kapalı.
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
   const itemCount = cart?.cartItems.reduce((total,item) => total + item.quantity, 0)
+
+  function handleLogout() {
+    setMenuAnchor(null);
+    logout();
+    //? Header'da kullanıcının sepeti kalmasın; yeni anonim sepet çekilir (backend yeni cookie verir).
+    requests.Cart.get().then(cart => setCart(cart)).catch(() => setCart(null));
+    navigate("/catalog");
+  }
 
   return (
     <AppBar position="static" sx={{mb:4}}>
@@ -40,11 +55,28 @@ export default function Header() {
           </Box>
 
           <Box sx={{display:"flex", alignItems:"center"}}>
-              <IconButton component={Link} to="/cart" size="large" edge="start" color="inherit">
+              <IconButton component={Link} to="/cart" size="large" edge="start" color="inherit" aria-label="Sepet">
                 <Badge badgeContent={itemCount} color="secondary">
                   <ShoppingCart/>
                 </Badge>
               </IconButton>
+
+              {user ? (
+                <>
+                  <Button color="inherit" startIcon={<AccountCircle />} onClick={e => setMenuAnchor(e.currentTarget)}>
+                    {user.name}
+                  </Button>
+                  <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
+                    <MenuItem component={Link} to="/orders" onClick={() => setMenuAnchor(null)}>Siparişlerim</MenuItem>
+                    <MenuItem onClick={handleLogout}>Çıkış</MenuItem>
+                  </Menu>
+                </>
+              ) : (
+                <Stack direction="row">
+                  <Button component={NavLink} to="/login" sx={navStyles}>Giriş</Button>
+                  <Button component={NavLink} to="/register" sx={navStyles}>Kayıt</Button>
+                </Stack>
+              )}
           </Box>
 
         </Toolbar>

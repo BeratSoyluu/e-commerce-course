@@ -1,12 +1,15 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>34afc263-91cf-4d91-a49c-dcdc9c002fb6</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="10.0.10" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.10" />
     <!-- ? Microsoft.AspNetCore.OpenApi 10.0.10 bu paketi 2.0.0 olarak getiriyor (geçişli bağımlılık). -->
     <!-- ! 2.0.0 - 2.7.4 arası CVE-2026-49451 (GHSA-v5pm-xwqc-g5wc) açığına sahip; aynı major içindeki ilk yamalı sürüme sabitlendi. -->

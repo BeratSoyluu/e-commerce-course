@@ -1,6 +1,13 @@
 using API.Data;
 using Microsoft.EntityFrameworkCore;
 using API.Middlewares;
+using System.Text;
+using API.Entity;
+using API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +23,43 @@ builder.Services.AddDbContext<DataContext>(options =>
 
 
 builder.Services.AddCors();
+
+//? AddIdentity yerine AddIdentityCore: AddIdentity cookie tabanlı oturumu varsayılan yapar ve [Authorize] 401 yerine
+//? /Account/Login sayfasına 302 yönlendirmesi döner. API'de sadece kullanıcı/rol yönetimi lazım, oturumu JWT taşıyor.
+builder.Services.AddIdentityCore<AppUser>(options =>
+{
+    options.User.RequireUniqueEmail = true;
+    options.Password.RequireNonAlphanumeric = false; //? En az 6 karakter + büyük harf + küçük harf + rakam yeterli
+})
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<DataContext>()
+    .AddErrorDescriber<TurkishIdentityErrorDescriber>();
+
+//! Development'ta appsettings.Development.json'daki test değeri, user-secrets'ta değer varsa o kullanılır (user-secrets daha sonra yüklenip üzerine yazar).
+//! Production'da anahtar yoksa uygulama hiç başlamaz: imzasız/zayıf anahtarla çalışmaktansa hemen hata vermek daha güvenli.
+var jwtKey = builder.Configuration["JWTSecurityKey"];
+if (string.IsNullOrEmpty(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 32)
+    throw new InvalidOperationException("JWTSecurityKey tanımlı değil ya da 32 bayttan kısa (HMAC-SHA256 en az 256 bit ister).");
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        //? Claim isimleri token'daki gibi kalsın ("role" -> uzun Microsoft URI'sine çevrilmesin)
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            ValidateLifetime = true,
+            //? Token'ı aynı uygulama üretip doğruluyor; issuer/audience ayrımı birden fazla servis olduğunda anlamlı.
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            NameClaimType = JwtRegisteredClaimNames.UniqueName, //? User.Identity.Name = kullanıcı adı
+            RoleClaimType = TokenService.RoleClaim //? [Authorize(Roles = "Admin")] bu claim'e bakar
+        };
+    });
+
+builder.Services.AddScoped<TokenService>();
 
 
 builder.Services.AddControllers();
@@ -49,8 +93,14 @@ app.UseCors(opt =>
     opt.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("http://localhost:3000").WithExposedHeaders("Pagination");
 });
 
+//! Sıra önemli: UseAuthentication token'ı okuyup "bu kim?" sorusunu cevaplar (User'ı doldurur),
+//! UseAuthorization "buna izni var mı?" diye bakar. Ters olursa yetki kontrolü her isteği anonim görür ve 401 döner.
+//! İkisi de CORS'tan sonra: 401 cevapları da CORS header'ı taşısın, yoksa tarayıcı hatayı JS'e hiç göstermez.
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+await SeedDatabase.Initialize(app);
 
 app.Run();

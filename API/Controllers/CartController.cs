@@ -1,6 +1,7 @@
 using API.Data;
 using API.DTO;
 using API.Entity;
+using API.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -81,15 +82,26 @@ public class CartController : ControllerBase
 
     private async Task<Cart> GetOrCreate()
     {
-        var cart = await _context.Carts
-        .Include(i => i.CartItems)
-        .ThenInclude(i => i.Product)
-        .Where(i => i.CustomerId == Request.Cookies["customerId"])
+        //? Login'li kullanıcının sepeti kullanıcı adıyla, anonim kullanıcınınki cookie'deki Guid ile bulunur.
+        //? User.Identity.Name, JWT'deki unique_name claim'inden gelir (Program.cs -> NameClaimType).
+        var customerId = User.Identity?.Name ?? Request.Cookies["customerId"];
+
+        var cart = string.IsNullOrEmpty(customerId) ? null : await _context.Carts
+        .IncludeItems()
+        .Where(i => i.CustomerId == customerId)
         .FirstOrDefaultAsync();
+
+        if(cart == null && User.Identity?.Name != null)
+        {
+            //? Login'li kullanıcıya cookie gerekmez
+            cart = new Cart{CustomerId = User.Identity.Name};
+            _context.Carts.Add(cart);
+            await _context.SaveChangesAsync();
+        }
 
         if(cart == null)
         {
-            var customerId = Guid.NewGuid().ToString();
+            customerId = Guid.NewGuid().ToString();
 
             var cookieOptions = new CookieOptions
             {
