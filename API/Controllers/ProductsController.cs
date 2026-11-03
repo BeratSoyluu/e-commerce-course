@@ -1,6 +1,7 @@
 using API.Data;
 using API.DTO;
-using API.Entity;
+using API.Extensions;
+using API.RequestHelpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,15 +20,36 @@ namespace API.Controllers
         }
 
         //? ActionResult<T> kullanınca Swagger dönüş tipini (ProductDTO) şemada gösterebiliyor; IActionResult'ta bu bilgi yok.
+        //? [FromQuery]: ProductParams'ın alanları query string'den doldurulur.
         [HttpGet]
-        public async Task<ActionResult<List<ProductDTO>>> GetProducts()
+        public async Task<ActionResult<List<ProductDTO>>> GetProducts([FromQuery] ProductParams productParams)
         {
             //? Filtre SQL'e çevrilir (WHERE IsActive = 1); pasif ürünler veritabanından hiç çekilmez.
-            var products = await _context.Products
+            var query = _context.Products
                 .Where(p => p.IsActive)
-                .Select(p => ProductToDTO(p))
-                .ToListAsync();
+                .Search(productParams.SearchTerm)
+                .Filter(productParams.Brands)
+                .Sort(productParams.OrderBy)
+                .ToDTO();
+
+            var products = await PagedList<ProductDTO>.ToPagedList(query, productParams.PageNumber, productParams.PageSize);
+
+            Response.AddPaginationHeader(products.MetaData);
             return products;
+        }
+
+        //? Filtre panelindeki marka listesi. Sabit yazmak yerine veritabanından geliyor; yeni marka eklenince otomatik görünür.
+        [HttpGet("filters")]
+        public async Task<ActionResult> GetFilters()
+        {
+            var brands = await _context.Products
+                .Where(p => p.IsActive && p.Brand != null)
+                .Select(p => p.Brand!)
+                .Distinct()
+                .OrderBy(b => b)
+                .ToListAsync();
+
+            return Ok(new { brands });
         }
 
         // api/products/1
@@ -40,28 +62,13 @@ namespace API.Controllers
             {
                 return NotFound(); //! 404 hata kodu
             }
-            var product = await _context.Products.FindAsync(id);
-            //var product = await _context.Products.FirstOrDefaultAsync(i => i.Id == id);
+            var product = await _context.Products.Where(p => p.Id == id).ToDTO().FirstOrDefaultAsync();
             if(product == null) //? product yoksa
             {
                 return NotFound(); //! 404 hata kodu
             }
 
-            return ProductToDTO(product);
-        }
-
-        private static ProductDTO ProductToDTO(Product product)
-        {
-            return new ProductDTO
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Description = product.Description,
-                Price = product.Price,
-                IsActive = product.IsActive,
-                ImageUrl = product.ImageUrl,
-                Stock = product.Stock
-            };
+            return product;
         }
     }
 }

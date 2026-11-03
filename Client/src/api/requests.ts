@@ -3,6 +3,7 @@ import { toast } from "react-toastify";
 import { router } from "../router/Routes";
 import { API_URL } from "../utils/helpers";
 import type { IProduct } from "../model/IProduct";
+import type { MetaData, PaginatedResponse } from "../model/IPagination";
 //? Aşağıdaki "const Cart" ile isim çakışmasın diye tipi ICart adıyla alıyoruz.
 import type { Cart as ICart } from "../model/ICart";
 
@@ -57,6 +58,12 @@ const queries ={
     post:<T>(url:string, body:object) => axios.post<T>(url,body).then((response:AxiosResponse<T>) => response.data),
     put:<T>(url:string, body:object) => axios.put<T>(url,body).then((response:AxiosResponse<T>) => response.data),
     delete:<T>(url:string) => axios.delete<T>(url).then((response:AxiosResponse<T>) => response.data),
+    //? Sayfalı listeler: gövde düz dizi, sayfa bilgisi "Pagination" header'ında (axios header adlarını küçük harfe çevirir).
+    getPaged:<T>(url:string, params: URLSearchParams) => axios.get<T[]>(url, { params })
+        .then((response:AxiosResponse<T[]>): PaginatedResponse<T> => ({
+            items: response.data,
+            metaData: JSON.parse(response.headers["pagination"]) as MetaData
+        })),
 }
 
 const Errors ={
@@ -68,8 +75,9 @@ const Errors ={
 }
 
 const Catalog={
-    list: () => queries.get<IProduct[]>("products"),
-    details: (id:number) => queries.get<IProduct>(`products/${id}`)
+    list: (params: URLSearchParams) => queries.getPaged<IProduct>("products", params),
+    details: (id:number) => queries.get<IProduct>(`products/${id}`),
+    filters: () => queries.get<{ brands: string[] }>("products/filters")
 }
 
 const Cart = {

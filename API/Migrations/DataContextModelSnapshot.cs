@@ -61,6 +61,9 @@ namespace API.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Brand")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
@@ -88,6 +91,7 @@ namespace API.Migrations
                         new
                         {
                             Id = 1,
+                            Brand = "Apple",
                             Description = "Akıllı Saat Açıklaması",
                             ImageUrl = "1.jpg",
                             IsActive = true,
@@ -98,6 +102,7 @@ namespace API.Migrations
                         new
                         {
                             Id = 2,
+                            Brand = "Apple",
                             Description = "Akıllı Saat Açıklaması",
                             ImageUrl = "2.jpg",
                             IsActive = true,
@@ -108,6 +113,7 @@ namespace API.Migrations
                         new
                         {
                             Id = 3,
+                            Brand = "Apple",
                             Description = "Akıllı Saat Açıklaması",
                             ImageUrl = "3.jpg",
                             IsActive = true,
@@ -118,6 +124,7 @@ namespace API.Migrations
                         new
                         {
                             Id = 4,
+                            Brand = "Xiaomi",
                             Description = "Akıllı Saat Açıklaması",
                             ImageUrl = "4.jpg",
                             IsActive = true,
@@ -128,6 +135,7 @@ namespace API.Migrations
                         new
                         {
                             Id = 5,
+                            Brand = "Xiaomi",
                             Description = "Akıllı Saat Açıklaması",
                             ImageUrl = "5.jpg",
                             IsActive = true,
@@ -138,6 +146,7 @@ namespace API.Migrations
                         new
                         {
                             Id = 6,
+                            Brand = "Xiaomi",
                             Description = "Akıllı Saat Açıklaması",
                             ImageUrl = "6.jpg",
                             IsActive = true,
@@ -148,6 +157,7 @@ namespace API.Migrations
                         new
                         {
                             Id = 7,
+                            Brand = "Xiaomi",
                             Description = "Akıllı Saat Açıklaması",
                             ImageUrl = "7.jpg",
                             IsActive = true,
@@ -159,7 +169,7 @@ namespace API.Migrations
 
             modelBuilder.Entity("API.Entity.CartItem", b =>
                 {
-                    b.HasOne("API.Entity.Cart", "Cart")
+                    b.HasOne("API.Entity.Cart", null)
                         .WithMany("CartItems")
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -170,8 +180,6 @@ namespace API.Migrations
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Cart");
 
                     b.Navigation("Product");
                 });

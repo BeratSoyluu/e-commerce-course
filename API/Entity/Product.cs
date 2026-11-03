@@ -13,5 +13,6 @@ public class Product
     public bool IsActive { get; set; }
     public string? ImageUrl { get; set; }
     public int Stock { get; set; }
+    public string? Brand { get; set; } //? Katalogda marka filtresi için
 
 }

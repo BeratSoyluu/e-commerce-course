@@ -11,4 +11,5 @@ public class ProductDTO
     public bool IsActive { get; set; }
     public string? ImageUrl { get; set; }
     public int Stock { get; set; }
+    public string? Brand { get; set; }
 }
