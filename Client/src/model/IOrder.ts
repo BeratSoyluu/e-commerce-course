@@ -23,11 +23,23 @@ export interface Order {
     orderItems: OrderItem[];
 }
 
-//? Backend'deki CreateOrderDTO'nun karşılığı: sadece adres gönderiliyor, fiyatlar sunucuda hesaplanıyor.
-export interface CreateOrder {
+export interface Address {
     firstName: string;
     lastName: string;
     phone: string;
     city: string;
     addressLine: string;
+}
+
+export interface Card {
+    cardHolderName: string;
+    cardNumber: string;
+    expireMonth: string;
+    expireYear: string;
+    cvc: string;
+}
+
+//? Backend'deki CreateOrderDTO'nun karşılığı: adres + kart gönderiliyor, fiyatlar sunucuda hesaplanıyor.
+export interface CreateOrder extends Address {
+    card: Card;
 }

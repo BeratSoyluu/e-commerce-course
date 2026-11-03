@@ -50,4 +50,32 @@ public class CreateOrderDTO
     [Required(ErrorMessage = "Adres zorunlu.")]
     [StringLength(250, MinimumLength = 10, ErrorMessage = "Adres en az 10 karakter olmalı.")]
     public string AddressLine { get; set; } = null!;
+
+    [Required(ErrorMessage = "Kart bilgileri zorunlu.")]
+    public CardDTO Card { get; set; } = null!;
+}
+
+//! Kart bilgisi sadece bu istek boyunca bellekte yaşar: iyzico'ya iletilir, Order entity'sinde karşılığı yok,
+//! veritabanına yazılmaz ve hiçbir log satırına eklenmez. Hata mesajları da değeri değil alan adını içerir.
+public class CardDTO
+{
+    [Required(ErrorMessage = "Kart üzerindeki isim zorunlu.")]
+    [StringLength(100)]
+    public string CardHolderName { get; set; } = null!;
+
+    [Required(ErrorMessage = "Kart numarası zorunlu.")]
+    [RegularExpression(@"^\d{15,16}$", ErrorMessage = "Kart numarası 15-16 haneli olmalı.")]
+    public string CardNumber { get; set; } = null!;
+
+    [Required(ErrorMessage = "Son kullanma ayı zorunlu.")]
+    [RegularExpression(@"^(0[1-9]|1[0-2])$", ErrorMessage = "Ay 01-12 arasında olmalı.")]
+    public string ExpireMonth { get; set; } = null!;
+
+    [Required(ErrorMessage = "Son kullanma yılı zorunlu.")]
+    [RegularExpression(@"^20\d{2}$", ErrorMessage = "Yıl 4 haneli olmalı (ör. 2030).")]
+    public string ExpireYear { get; set; } = null!;
+
+    [Required(ErrorMessage = "CVC zorunlu.")]
+    [RegularExpression(@"^\d{3,4}$", ErrorMessage = "CVC 3-4 haneli olmalı.")]
+    public string Cvc { get; set; } = null!;
 }

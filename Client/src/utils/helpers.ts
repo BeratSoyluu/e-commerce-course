@@ -17,6 +17,24 @@ export function calculateDeliveryFee(subTotal: number) {
     return subTotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
 }
 
+//? Luhn algoritması: kart numarasının son hanesi kontrol hanesidir. Yanlış yazılan numarayı sunucuya gitmeden yakalar.
+//! Bu sadece yazım hatası kontrolü; kartın geçerli/limitli olduğunu sadece ödeme sağlayıcısı bilir.
+export function isValidCardNumber(value: string) {
+    const digits = value.replace(/\s/g, "");
+    if(!/^\d{15,16}$/.test(digits)) return false;
+
+    let sum = 0;
+    for(let i = 0; i < digits.length; i++) {
+        let digit = Number(digits[digits.length - 1 - i]);
+        if(i % 2 === 1) {
+            digit *= 2;
+            if(digit > 9) digit -= 9;
+        }
+        sum += digit;
+    }
+    return sum % 10 === 0;
+}
+
 const dateFormatter = new Intl.DateTimeFormat("tr-TR", { dateStyle: "medium", timeStyle: "short" });
 
 export function formatDate(value: string) {

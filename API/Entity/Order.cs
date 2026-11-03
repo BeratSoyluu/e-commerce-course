@@ -18,6 +18,8 @@ public class Order
     public string AddressLine { get; set; } = null!;
 
     public OrderStatus OrderStatus { get; set; } = OrderStatus.Pending;
+    //? iyzico'nun ödeme kimliği: iade/sorgu için gerekir. Kart bilgisi değildir; kart hiçbir zaman saklanmaz.
+    public string? PaymentId { get; set; }
     public decimal SubTotal { get; set; }
     public decimal DeliveryFee { get; set; }
     public List<OrderItem> OrderItems { get; set; } = new List<OrderItem>();

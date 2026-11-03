@@ -2,6 +2,7 @@ using API.Data;
 using API.DTO;
 using API.Entity;
 using API.Extensions;
+using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,10 +16,12 @@ namespace API.Controllers;
 public class OrdersController : ControllerBase
 {
     private readonly DataContext _context;
+    private readonly PaymentService _paymentService;
 
-    public OrdersController(DataContext context)
+    public OrdersController(DataContext context, PaymentService paymentService)
     {
         _context = context;
+        _paymentService = paymentService;
     }
 
     [HttpGet]
@@ -100,6 +103,30 @@ public class OrdersController : ControllerBase
         };
 
         _context.Orders.Add(order);
+        //? Önce Pending olarak kaydediyoruz: iyzico'ya sipariş numarası (BasketId) gönderebilmek için Id lazım.
+        await _context.SaveChangesAsync();
+
+        //! Ödeme isteği transaction açıkken yapılıyor; bu sürede SQLite yazma kilidi tutulur ve diğer siparişler bekler.
+        //! Küçük bir proje için kabul edilebilir; yoğun trafikte stok "rezervasyon" tablosuyla kilit süresi kısaltılmalı.
+        var ip = HttpContext.Connection.RemoteIpAddress?.MapToIPv4().ToString() ?? "127.0.0.1";
+        var payment = await _paymentService.ProcessPayment(order, model.Card, userName, ip);
+
+        if(!payment.Success)
+        {
+            //? Ödeme olmadı: düşülen stok geri eklenir, sipariş PaymentFailed olarak kayıt altında kalır, sepet silinmez
+            //? (kullanıcı başka kartla tekrar deneyebilsin).
+            foreach(var item in cart.CartItems)
+                item.Product.Stock += item.Quantity;
+            order.OrderStatus = OrderStatus.PaymentFailed;
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return BadRequest(new ProblemDetails{Title = $"Ödeme başarısız: {payment.ErrorMessage}"});
+        }
+
+        order.OrderStatus = OrderStatus.Approved;
+        order.PaymentId = payment.PaymentId;
         _context.Carts.Remove(cart); //? Sipariş verildi, sepet boşalır (kalemler cascade ile silinir)
 
         await _context.SaveChangesAsync();

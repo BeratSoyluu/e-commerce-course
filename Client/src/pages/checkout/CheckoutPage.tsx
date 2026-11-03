@@ -1,4 +1,4 @@
-import { Box, Button, Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
+import { Alert, Box, Button, Paper, Step, StepLabel, Stepper, Typography } from "@mui/material";
 import { CheckCircleOutlined } from "@mui/icons-material";
 import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -8,16 +8,17 @@ import PaymentForm from "./PaymentForm";
 import Review from "./Review";
 import requests from "../../api/requests";
 import { useCartContext } from "../../context/useCartContext";
-import type { CreateOrder } from "../../model/IOrder";
+import type { Address, Card } from "../../model/IOrder";
 
-export type CheckoutForm = CreateOrder;
+//? Form alanları düz (iç içe değil) tutuluyor; gönderirken kart alanları "card" nesnesine toplanıyor.
+export type CheckoutForm = Address & Card;
 
 const steps = ["Adres", "Ödeme", "Özet"];
 
 //? Her adımda sadece o adımın alanları doğrulanır; kullanıcı ödeme adımına geçerken özet alanlarıyla ilgili hata görmez.
 const stepFields: (keyof CheckoutForm)[][] = [
     ["firstName", "lastName", "phone", "city", "addressLine"],
-    [],
+    ["cardHolderName", "cardNumber", "expireMonth", "expireYear", "cvc"],
     [],
 ];
 
@@ -25,9 +26,10 @@ export default function CheckoutPage() {
     const { cart, setCart } = useCartContext();
     const [activeStep, setActiveStep] = useState(0);
     const [orderId, setOrderId] = useState<number | null>(null);
+    const [paymentError, setPaymentError] = useState<string | null>(null);
     //? Tek form tüm adımları kapsıyor (FormProvider ile alt bileşenlere dağıtılıyor)
     const methods = useForm<CheckoutForm>({ mode: "onTouched" });
-    const { handleSubmit, trigger, formState: { isSubmitting } } = methods;
+    const { handleSubmit, trigger, setValue, formState: { isSubmitting } } = methods;
 
     async function handleNext() {
         //? trigger(alanlar): sadece verilen alanları doğrular, geçerliyse true döner
@@ -38,14 +40,24 @@ export default function CheckoutPage() {
     //! Formda tek submit butonu son adımdaki "Siparişi Onayla". Önceki adımlarda submit butonu olmadığı ve birden fazla
     //! input bulunduğu için tarayıcı Enter'la formu göndermez; yanlışlıkla sipariş verilemez.
     async function onSubmit(data: CheckoutForm) {
+        const { cardHolderName, cardNumber, expireMonth, expireYear, cvc, ...address } = data;
+        setPaymentError(null);
         try {
-            const order = await requests.Orders.create(data);
+            const order = await requests.Orders.create({
+                ...address,
+                //? Kullanıcı numarayı boşluklu yazabilir ("5528 7900 ..."); sunucu sadece rakam bekliyor.
+                card: { cardHolderName, cardNumber: cardNumber.replace(/\s/g, ""), expireMonth, expireYear, cvc }
+            });
             setOrderId(order.id);
             //? Backend sepeti sildi; header'daki sayaç da sıfırlansın
             setCart(null);
             setActiveStep(steps.length);
         } catch (error) {
-            console.log(error); //? Stok yetersiz vb. mesajları interceptor toast ile gösteriyor
+            //? Interceptor toast gösteriyor; ödeme reddi gibi durumlarda mesajı özet adımında kalıcı olarak da gösteriyoruz.
+            const title = (error as { data?: { title?: string } })?.data?.title;
+            setPaymentError(title ?? "Sipariş oluşturulamadı, lütfen tekrar deneyin.");
+            //! CVC güvenlik için silinir; tekrar denemede yeniden girilmesi gerekir.
+            setValue("cvc", "");
         }
     }
 
@@ -84,6 +96,13 @@ export default function CheckoutPage() {
                     {activeStep === 0 && <AddressForm />}
                     {activeStep === 1 && <PaymentForm />}
                     {activeStep === 2 && <Review cartItems={cart.cartItems} />}
+
+                    {activeStep === 2 && paymentError && (
+                        <Alert severity="error" sx={{ mt: 3 }}
+                            action={<Button color="inherit" size="small" onClick={() => setActiveStep(1)}>Kartı Değiştir</Button>}>
+                            {paymentError}
+                        </Alert>
+                    )}
 
                     <Box sx={{ display: "flex", justifyContent: "space-between", mt: 4 }}>
                         <Button disabled={activeStep === 0} onClick={() => setActiveStep(step => step - 1)}>Geri</Button>
