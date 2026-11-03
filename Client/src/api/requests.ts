@@ -128,6 +128,11 @@ const Admin = {
     updateOrderStatus: (id: number, status: string) => queries.put<Order>(`admin/orders/${id}/status`, { status }),
 }
 
+const Contact = {
+    send: (body: { name: string; email: string; subject: string; message: string }) =>
+        queries.post<{ message: string }>("contact", body),
+}
+
 const Account = {
     login: (body: { email: string; password: string }) => queries.post<User>("account/login", body),
     register: (body: { name: string; email: string; password: string }) => queries.post<void>("account/register", body),
@@ -135,7 +140,7 @@ const Account = {
 }
 
 const requests = {
-    Catalog, Errors, Cart, Account, Orders, Admin
+    Catalog, Errors, Cart, Account, Orders, Admin, Contact
 }
 
 export default requests

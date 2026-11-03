@@ -1,4 +1,5 @@
-import { Button, CircularProgress, Divider, Grid, Stack, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography} from "@mui/material";
+import { Button, Divider, Grid, Stack, Table, TableBody, TableCell, TableContainer, TableRow, TextField, Typography} from "@mui/material";
+import { ProductDetailsSkeleton } from "../../components/Skeletons";
 import { AddShoppingCart } from "@mui/icons-material";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router";
@@ -31,7 +32,7 @@ export default function ProductDetailsPage(){
         .finally(() => setLoading(false));
     },[id]);
 
-    if(loading) return <CircularProgress />
+    if(loading) return <ProductDetailsSkeleton />
     if(!product) return <NotFound />;
 
     //? Sepet context'ten geliyor; App sepeti yüklemeden sayfayı göstermediği için burada güncel.

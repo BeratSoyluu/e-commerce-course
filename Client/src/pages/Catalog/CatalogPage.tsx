@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { ProductGridSkeleton } from "../../components/Skeletons";
 import type { IProduct } from "../../model/IProduct";
 import ProductList from "./ProductList";
-import { Box, CircularProgress, Grid, Pagination, Typography } from "@mui/material";
+import { Box, Grid, Pagination, Typography } from "@mui/material";
 import requests from "../../api/requests";
 import type { ProductParams } from "../../model/IProductParams";
 import type { PaginatedResponse } from "../../model/IPagination";
@@ -61,7 +62,7 @@ export default function CatalogPage(){
       </Grid>
 
       <Grid size={{ xs: 12, md: 9 }}>
-        {loading && <CircularProgress />}
+        {loading && <ProductGridSkeleton />}
 
         {!loading && data && data.items.length === 0 &&
           <Typography variant="h6" sx={{ mt: 2 }}>Sonuç bulunamadı</Typography>}

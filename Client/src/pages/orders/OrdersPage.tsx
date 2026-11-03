@@ -1,4 +1,5 @@
-import { Button, Chip, CircularProgress, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { Button, Chip, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { TableSkeleton } from "../../components/Skeletons";
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import requests from "../../api/requests";
@@ -17,7 +18,7 @@ export default function OrdersPage() {
             });
     }, []);
 
-    if(!orders) return <CircularProgress />;
+    if(!orders) return <TableSkeleton />;
 
     if(orders.length === 0) {
         return (

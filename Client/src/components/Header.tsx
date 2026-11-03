@@ -1,5 +1,5 @@
-import { AccountCircle, ShoppingCart } from "@mui/icons-material";
-import { AppBar, Badge, Box, Button, IconButton, Menu, MenuItem, Stack, Toolbar, Typography } from "@mui/material";
+import { AccountCircle, Menu as MenuIcon, ShoppingCart } from "@mui/icons-material";
+import { AppBar, Badge, Box, Button, Drawer, IconButton, List, ListItemButton, ListItemText, Menu, MenuItem, Stack, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router";
 import { useCartContext } from "../context/useCartContext";
@@ -30,9 +30,16 @@ export default function Header() {
   const { cart, setCart } = useCartContext();
   const { user, logout } = useAccountContext();
   const navigate = useNavigate();
+  const theme = useTheme();
+  //? md (900px) altında linkler yan yana sığmıyor; hamburger menüye geçiyoruz.
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   //? Menü, açıldığı butona (anchor) göre konumlanır; null ise kapalı.
   const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const itemCount = cart?.cartItems.reduce((total,item) => total + item.quantity, 0)
+
+  //? Sadece Admin rolünde görünür. Gizlemek güvenlik değildir; API zaten Admin olmayana 403 döner.
+  const navLinks = user?.roles.includes("Admin") ? [...links, {title:"Admin",to:"/admin"}] : links;
 
   function handleLogout() {
     setMenuAnchor(null);
@@ -46,15 +53,17 @@ export default function Header() {
     <AppBar position="static" sx={{mb:4}}>
         <Toolbar sx={{display:"flex",justifyContent:"space-between"}}>
           <Box sx={{display:"flex", alignItems:"center"}}>
-            <Typography variant="h6">E-Commerce</Typography>
-            <Stack direction="row">
-              {links.map(link =>
-              <Button key={link.to} component={NavLink} to={link.to} sx={navStyles}> {link.title}</Button>
-              )}
-              {/* //? Sadece Admin rolünde görünür. Gizlemek güvenlik değildir; API zaten Admin olmayana 403 döner. */}
-              {user?.roles.includes("Admin") &&
-                <Button component={NavLink} to="/admin" sx={navStyles}>Admin</Button>}
-            </Stack>
+            {isMobile &&
+              <IconButton color="inherit" edge="start" aria-label="Menüyü aç" onClick={() => setDrawerOpen(true)} sx={{ mr: 1 }}>
+                <MenuIcon />
+              </IconButton>}
+            <Typography variant="h6" component={Link} to="/" sx={{ color: "inherit", textDecoration: "none", mr: 2 }}>E-Commerce</Typography>
+            {!isMobile &&
+              <Stack direction="row">
+                {navLinks.map(link =>
+                <Button key={link.to} component={NavLink} to={link.to} sx={navStyles}> {link.title}</Button>
+                )}
+              </Stack>}
           </Box>
 
           <Box sx={{display:"flex", alignItems:"center"}}>
@@ -66,15 +75,16 @@ export default function Header() {
 
               {user ? (
                 <>
-                  <Button color="inherit" startIcon={<AccountCircle />} onClick={e => setMenuAnchor(e.currentTarget)}>
-                    {user.name}
-                  </Button>
+                  {/* //? Mobilde isim yer kaplamasın, sadece ikon; aria-label ekran okuyucu ve testler için ismi taşıyor */}
+                  {isMobile
+                    ? <IconButton color="inherit" aria-label={user.name} onClick={e => setMenuAnchor(e.currentTarget)}><AccountCircle /></IconButton>
+                    : <Button color="inherit" startIcon={<AccountCircle />} onClick={e => setMenuAnchor(e.currentTarget)}>{user.name}</Button>}
                   <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
                     <MenuItem component={Link} to="/orders" onClick={() => setMenuAnchor(null)}>Siparişlerim</MenuItem>
                     <MenuItem onClick={handleLogout}>Çıkış</MenuItem>
                   </Menu>
                 </>
-              ) : (
+              ) : !isMobile && (
                 <Stack direction="row">
                   <Button component={NavLink} to="/login" sx={navStyles}>Giriş</Button>
                   <Button component={NavLink} to="/register" sx={navStyles}>Kayıt</Button>
@@ -83,6 +93,19 @@ export default function Header() {
           </Box>
 
         </Toolbar>
+
+        {/* //? Mobil menü: soldan açılan çekmece. Bir linke tıklayınca kapanıyor. */}
+        <Drawer open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+          <List sx={{ width: 240 }} onClick={() => setDrawerOpen(false)}>
+            {navLinks.map(link =>
+              <ListItemButton key={link.to} component={NavLink} to={link.to}><ListItemText primary={link.title} /></ListItemButton>
+            )}
+            {!user && <>
+              <ListItemButton component={NavLink} to="/login"><ListItemText primary="Giriş" /></ListItemButton>
+              <ListItemButton component={NavLink} to="/register"><ListItemText primary="Kayıt" /></ListItemButton>
+            </>}
+          </List>
+        </Drawer>
     </AppBar>
   )
 }

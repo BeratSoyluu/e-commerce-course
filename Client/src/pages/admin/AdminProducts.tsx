@@ -1,4 +1,5 @@
-import { Box, Button, Chip, CircularProgress, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from "@mui/material";
+import { Box, Button, Chip, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip } from "@mui/material";
+import { TableSkeleton } from "../../components/Skeletons";
 import { Add, Delete, Edit } from "@mui/icons-material";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";
@@ -38,7 +39,7 @@ export default function AdminProducts() {
         loadProducts();
     }
 
-    if(!products) return <CircularProgress />;
+    if(!products) return <TableSkeleton columns={7} />;
 
     return (
         <>

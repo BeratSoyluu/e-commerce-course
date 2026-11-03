@@ -1,4 +1,5 @@
-import { Box, Button, Chip, CircularProgress, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, Button, Chip, Grid, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { TableSkeleton } from "../../components/Skeletons";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router";
 import requests from "../../api/requests";
@@ -19,7 +20,7 @@ export default function OrderDetailsPage() {
             .finally(() => setLoading(false));
     }, [id]);
 
-    if(loading) return <CircularProgress />;
+    if(loading) return <TableSkeleton rows={4} />;
     if(!order) return <NotFound />;
 
     const status = orderStatusLabels[order.orderStatus];

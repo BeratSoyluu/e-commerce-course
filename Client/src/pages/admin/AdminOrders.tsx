@@ -1,4 +1,5 @@
-import { CircularProgress, MenuItem, Paper, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { MenuItem, Paper, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { TableSkeleton } from "../../components/Skeletons";
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import requests from "../../api/requests";
@@ -27,7 +28,7 @@ export default function AdminOrders() {
         }
     }
 
-    if(!orders) return <CircularProgress />;
+    if(!orders) return <TableSkeleton columns={6} />;
 
     return (
         <TableContainer component={Paper}>

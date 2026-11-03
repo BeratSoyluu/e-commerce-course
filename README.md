@@ -1,6 +1,82 @@
 # E-Ticaret
 
-ASP.NET Core .NET 10 Web API + React 19 ile yazılmış e-ticaret uygulaması.
+ASP.NET Core .NET 10 Web API ve React 19 ile yazılmış, akıllı saat satan bir e-ticaret uygulaması.
+Udemy kursu takip edilerek başlanmış, üzerine kimlik doğrulama, sipariş, ödeme ve admin paneli eklenmiştir.
+
+## Özellikler
+
+- **Katalog:** arama (debounce), marka filtresi, sıralama, sayfalama (`Pagination` header'ı)
+- **Sepet:** anonim kullanıcı için cookie ile takip, giriş yapınca hesaptaki sepetle birleşir, stok kontrolü
+- **Hesap:** ASP.NET Core Identity + JWT, kayıt/giriş, korumalı sayfalar
+- **Sipariş:** 3 adımlı checkout (adres, ödeme, özet), stok düşme ve sepet temizleme tek transaction'da
+- **Ödeme:** iyzico sandbox; anahtar yoksa simülasyon. Başarısız ödemede stok geri alınır
+- **Admin paneli:** ürün ekle/düzenle/satıştan kaldır (görsel yüklemeli), sipariş durumu yönetimi
+- **Diğer:** iletişim formu, mobil uyumlu arayüz, Skeleton yükleme ekranları
+
+## Teknolojiler
+
+| Katman | Teknoloji |
+|---|---|
+| Backend | ASP.NET Core .NET 10 Web API, EF Core 10 + SQLite, ASP.NET Core Identity, JWT Bearer, OpenAPI 3.0 + Swagger UI, Iyzipay |
+| Frontend | React 19, TypeScript, Vite 8, React Router 8, MUI 9, axios, react-hook-form, react-toastify |
+
+## Klasör yapısı
+
+```
+API/      Controllers, DTO, Entity, Data (DataContext, seed), Extensions, RequestHelpers, Services, Migrations, wwwroot
+Client/   src/api (requests.ts), components, context, model, pages, router, utils (helpers.ts)
+```
+
+## Kurulum
+
+Gereksinimler: [.NET 10 SDK](https://dotnet.microsoft.com/download), Node.js 20+ ve EF Core CLI aracı:
+
+```
+dotnet tool install --global dotnet-ef
+```
+
+1. **Veritabanını oluşturun.** SQLite dosyası repoda yok; migration'lar ve seed verisiyle oluşturulur:
+   ```
+   cd API
+   dotnet ef database update
+   ```
+2. **API'yi başlatın** (http://localhost:5274, Swagger: http://localhost:5274/swagger):
+   ```
+   cd API
+   dotnet run
+   ```
+   İlk açılışta roller ve test admin hesabı oluşturulur.
+3. **Frontend'i başlatın** (http://localhost:3000). Ayrı bir terminalde:
+   ```
+   cd Client
+   npm install
+   npm run dev
+   ```
+   API adresi `Client/.env.development` dosyasındaki `VITE_API_URL`'den okunur.
+
+### Production (tek uygulama)
+
+```
+cd Client
+npm run build          # çıktı API/wwwroot/app klasörüne yazılır
+cd ../API
+```
+
+Production'da user-secrets yüklenmez; `JWTSecurityKey` ortam değişkeni olarak verilmelidir, yoksa uygulama başlamaz:
+
+```powershell
+# PowerShell
+$env:JWTSecurityKey = "<en az 32 karakterlik rastgele bir değer>"
+dotnet run --no-launch-profile -- --environment Production --urls http://localhost:5274
+```
+
+```bash
+# bash
+JWTSecurityKey="<en az 32 karakterlik rastgele bir değer>" dotnet run --no-launch-profile -- --environment Production --urls http://localhost:5274
+```
+
+Uygulama http://localhost:5274 adresinden açılır. React uygulaması API'nin kendisinden sunulur (`MapFallbackToFile`),
+CORS ve Swagger kapalıdır, sepet cookie'si `Secure` işaretlidir (gerçek sunucuda HTTPS gerekir).
 
 ## Test hesapları
 

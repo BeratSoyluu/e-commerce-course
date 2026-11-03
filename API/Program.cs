@@ -102,11 +102,17 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
-app.UseCors(opt =>
+//? CORS sadece development'ta: orada React Vite'tan (localhost:3000), API 5274'ten geliyor, yani farklı origin.
+//? Production'da React build'i bu uygulamanın wwwroot'undan aynı adresten sunuluyor; CORS'a gerek yok.
+//! Kapalı tutmak daha güvenli: başka bir sitedeki script, kullanıcının cookie'siyle API'mize istek atıp cevabı okuyamaz.
+if (app.Environment.IsDevelopment())
 {
-    //? WithExposedHeaders: tarayıcı, CORS isteklerinde JS'e sadece temel header'ları gösterir. "Pagination"ı açıkça izinli yapıyoruz.
-    opt.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("http://localhost:3000").WithExposedHeaders("Pagination");
-});
+    app.UseCors(opt =>
+    {
+        //? WithExposedHeaders: tarayıcı, CORS isteklerinde JS'e sadece temel header'ları gösterir. "Pagination"ı açıkça izinli yapıyoruz.
+        opt.AllowAnyHeader().AllowAnyMethod().AllowCredentials().WithOrigins("http://localhost:3000").WithExposedHeaders("Pagination");
+    });
+}
 
 //! Sıra önemli: UseAuthentication token'ı okuyup "bu kim?" sorusunu cevaplar (User'ı doldurur),
 //! UseAuthorization "buna izni var mı?" diye bakar. Ters olursa yetki kontrolü her isteği anonim görür ve 401 döner.
@@ -115,6 +121,14 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+//? React Router adresleri (/catalog/3, /orders...) sunucuda dosya olarak yok. Controller'a da statik dosyaya da uymayan
+//? her istek index.html'e düşer; sayfa açılınca React Router doğru sayfayı çizer. Sayfa yenilemede 404 alınmaz.
+//? Build çıktısı wwwroot/app altında (vite.config.ts): wwwroot/images'taki ürün görselleriyle karışmasın diye.
+app.MapFallbackToFile("app/index.html");
+//! Olmayan bir /api adresi index.html (200) dönmesin; API istemcisi HTML yerine net bir 404 almalı.
+//! Literal "/api" segmenti olduğu için bu route yukarıdaki genel fallback'ten önceliklidir.
+app.MapFallback("/api/{**path}", () => Results.Problem(statusCode: 404, title: "Endpoint bulunamadı."));
 
 await SeedDatabase.Initialize(app);
 
