@@ -7,6 +7,7 @@ import type { MetaData, PaginatedResponse } from "../model/IPagination";
 //? Aşağıdaki "const Cart" ile isim çakışmasın diye tipi ICart adıyla alıyoruz.
 import type { Cart as ICart } from "../model/ICart";
 import type { User } from "../model/IUser";
+import type { CreateOrder, Order } from "../model/IOrder";
 import { clearStoredUser, getStoredUser, UNAUTHORIZED_EVENT } from "../utils/userStorage";
 
 //? Adres resimlerle aynı .env değişkeninden geliyor; port değişirse tek bir yeri güncellemek yeterli.
@@ -110,6 +111,12 @@ const Cart = {
     deleteItem: (productId: number, quantity = 1) =>queries.delete<ICart>(`cart?productId=${productId}&quantity=${quantity}`)
 }
 
+const Orders = {
+    list: () => queries.get<Order[]>("orders"),
+    details: (id: number) => queries.get<Order>(`orders/${id}`),
+    create: (body: CreateOrder) => queries.post<Order>("orders", body),
+}
+
 const Account = {
     login: (body: { email: string; password: string }) => queries.post<User>("account/login", body),
     register: (body: { name: string; email: string; password: string }) => queries.post<void>("account/register", body),
@@ -117,7 +124,7 @@ const Account = {
 }
 
 const requests = {
-    Catalog, Errors, Cart, Account
+    Catalog, Errors, Cart, Account, Orders
 }
 
 export default requests

@@ -104,8 +104,10 @@ export default function ShoppingCartPage()
         </Table>
       </TableContainer>
 
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", mt: 2, gap: 2 }}>
         <CartSummary cartItems={cart.cartItems} />
+        {/* //? Giriş yapılmamışsa /checkout'taki AuthGuard login'e gönderir, girişten sonra buraya geri döner. */}
+        <Button component={Link} to="/checkout" variant="contained" size="large">Siparişi Tamamla</Button>
       </Box>
       </>
     );

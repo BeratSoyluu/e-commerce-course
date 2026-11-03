@@ -9,10 +9,14 @@ public class DataContext(DbContextOptions options) : IdentityDbContext<AppUser>(
 {
     public DbSet<Product> Products => Set<Product>();
     public DbSet<Cart> Carts => Set<Cart>();
+    public DbSet<Order> Orders => Set<Order>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        //? Enum veritabanında sayı (0,1,2) yerine metin ("Pending") olarak saklansın; tabloya bakınca okunur, enum sırası değişse bozulmaz.
+        modelBuilder.Entity<Order>().Property(o => o.OrderStatus).HasConversion<string>();
 
         modelBuilder.Entity<Product>().HasData(
             new List<Product>

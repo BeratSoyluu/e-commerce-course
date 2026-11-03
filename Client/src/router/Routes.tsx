@@ -13,6 +13,8 @@ import LoginPage from "../pages/account/LoginPage"
 import RegisterPage from "../pages/account/RegisterPage"
 import AuthGuard from "../components/AuthGuard"
 import OrdersPage from "../pages/orders/OrdersPage"
+import OrderDetailsPage from "../pages/orders/OrderDetailsPage"
+import CheckoutPage from "../pages/checkout/CheckoutPage"
 
 export const router = createBrowserRouter([
     {
@@ -21,7 +23,9 @@ export const router = createBrowserRouter([
         children: [
             //? Path'siz route: kendi adresi yok, sadece altındaki sayfaları AuthGuard ile sarar.
             {element: <AuthGuard />, children: [
+                {path:"checkout",element:<CheckoutPage />},
                 {path:"orders",element:<OrdersPage />},
+                {path:"orders/:id",element:<OrderDetailsPage />},
             ]},
             {path:"",element:<HomePage />},
             {path:"about",element:<AboutPage />},
