@@ -6,6 +6,7 @@ public class OrderDTO
 {
     public int Id { get; set; }
     public DateTime OrderDate { get; set; }
+    public string CustomerId { get; set; } = null!; //? Admin panelinde siparişin kime ait olduğunu göstermek için
     public string FirstName { get; set; } = null!;
     public string LastName { get; set; } = null!;
     public string Phone { get; set; } = null!;

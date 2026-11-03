@@ -117,6 +117,17 @@ const Orders = {
     create: (body: CreateOrder) => queries.post<Order>("orders", body),
 }
 
+//? Admin endpoint'leri: backend [Authorize(Roles="Admin")] ile korunuyor; Admin olmayan token'la 403 döner.
+//? Ürün formu FormData olarak gidiyor: axios FormData görünce Content-Type'ı multipart/form-data (boundary ile) yapar.
+const Admin = {
+    products: () => queries.get<IProduct[]>("admin/products"),
+    createProduct: (form: FormData) => queries.post<IProduct>("admin/products", form),
+    updateProduct: (id: number, form: FormData) => queries.put<IProduct>(`admin/products/${id}`, form),
+    deleteProduct: (id: number) => queries.delete<void>(`admin/products/${id}`),
+    orders: () => queries.get<Order[]>("admin/orders"),
+    updateOrderStatus: (id: number, status: string) => queries.put<Order>(`admin/orders/${id}/status`, { status }),
+}
+
 const Account = {
     login: (body: { email: string; password: string }) => queries.post<User>("account/login", body),
     register: (body: { name: string; email: string; password: string }) => queries.post<void>("account/register", body),
@@ -124,7 +135,7 @@ const Account = {
 }
 
 const requests = {
-    Catalog, Errors, Cart, Account, Orders
+    Catalog, Errors, Cart, Account, Orders, Admin
 }
 
 export default requests

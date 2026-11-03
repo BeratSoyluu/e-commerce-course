@@ -19,6 +19,7 @@ public static class OrderExtensions
             //! SQLite tarihi saat dilimi bilgisi olmadan saklıyor; okununca Kind=Unspecified oluyor ve JSON'a "Z" eklenmiyor.
             //! Tarayıcı onu yerel saat sanar ve 3 saat kayar. UTC olduğunu açıkça işaretliyoruz.
             OrderDate = DateTime.SpecifyKind(order.OrderDate, DateTimeKind.Utc),
+            CustomerId = order.CustomerId,
             FirstName = order.FirstName,
             LastName = order.LastName,
             Phone = order.Phone,

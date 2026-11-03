@@ -10,6 +10,7 @@ export interface OrderItem {
 
 export interface Order {
     id: number;
+    customerId: string;
     orderDate: string; //? ISO metin (UTC, sonu "Z"); formatDate ile yerel saate çevrilir
     firstName: string;
     lastName: string;

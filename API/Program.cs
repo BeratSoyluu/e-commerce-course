@@ -2,6 +2,8 @@ using API.Data;
 using Microsoft.EntityFrameworkCore;
 using API.Middlewares;
 using System.Text;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 using API.Entity;
 using API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -61,6 +63,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddScoped<TokenService>();
 builder.Services.AddScoped<PaymentService>();
+builder.Services.AddScoped<ImageService>();
 
 
 builder.Services.AddControllers();
@@ -73,6 +76,17 @@ builder.Services.AddOpenApi(options =>
 var app = builder.Build();
 
 app.UseMiddleware<ExceptionHandling>();
+
+//! Middleware sırası: ExceptionHandling'den hemen sonra, model binding'den (MapControllers) önce olmalı.
+//! Sebep: form (multipart) değerleri isteğin kültürüyle parse edilir. Sunucu tr-TR'de çalışınca "." binlik ayırıcı sayılıyor
+//! ve admin formundan gelen "1234.50" fiyatı 123450 olarak kaydediliyordu. İstek kültürünü sabit (invariant) yapıyoruz;
+//! sadece invariant desteklendiği için tarayıcının Accept-Language başlığı da kültürü değiştiremez.
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(CultureInfo.InvariantCulture),
+    SupportedCultures = [CultureInfo.InvariantCulture],
+    SupportedUICultures = [CultureInfo.InvariantCulture]
+});
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

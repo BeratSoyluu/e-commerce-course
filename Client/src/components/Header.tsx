@@ -51,6 +51,9 @@ export default function Header() {
               {links.map(link =>
               <Button key={link.to} component={NavLink} to={link.to} sx={navStyles}> {link.title}</Button>
               )}
+              {/* //? Sadece Admin rolünde görünür. Gizlemek güvenlik değildir; API zaten Admin olmayana 403 döner. */}
+              {user?.roles.includes("Admin") &&
+                <Button component={NavLink} to="/admin" sx={navStyles}>Admin</Button>}
             </Stack>
           </Box>
 

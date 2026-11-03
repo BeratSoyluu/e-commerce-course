@@ -15,6 +15,8 @@ import AuthGuard from "../components/AuthGuard"
 import OrdersPage from "../pages/orders/OrdersPage"
 import OrderDetailsPage from "../pages/orders/OrderDetailsPage"
 import CheckoutPage from "../pages/checkout/CheckoutPage"
+import AdminGuard from "../components/AdminGuard"
+import AdminPage from "../pages/admin/AdminPage"
 
 export const router = createBrowserRouter([
     {
@@ -26,6 +28,9 @@ export const router = createBrowserRouter([
                 {path:"checkout",element:<CheckoutPage />},
                 {path:"orders",element:<OrdersPage />},
                 {path:"orders/:id",element:<OrderDetailsPage />},
+            ]},
+            {element: <AdminGuard />, children: [
+                {path:"admin",element:<AdminPage />},
             ]},
             {path:"",element:<HomePage />},
             {path:"about",element:<AboutPage />},
